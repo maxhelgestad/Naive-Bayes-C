@@ -79,41 +79,43 @@ main(int argc, char * argv[])
     prob[k] /= n;
   }
 
-  //for (int k = 0; k < 10; k++) {
-    //printf("prob[%d] = %lf\n", k, prob[k]);
-  //}
-
   /* Make Prediction */
   /* Allocate more memory. */
   double cprob[40] = { 0.0 };
   double count[40] = { 0.0 };
 
   /* populate count array with values calculated above*/
-  for (size_t i = 0; i < 40; i+=10) {
+  for (size_t i = 0; i < 4; i++) {
     for (size_t j = 0; j < 10; j++) {
-      count[i + j] = prob[j] * n;
+      count[i * 10 + j] = prob[j] * n;
     }
   }
 
   /* compute conditional probabilities */
   for (size_t w = 0; w < 4; w++) {
     for (int k = 0; k < 10; k++) {
-      for (size_t i = 0; i < m - 1; i++) {
-        for (size_t j = 0; j < n; j++) {
-          cprob[(w*10) + k] += ((rating[j * m + i] == urating[i]) && (rating[j * m + 4] == (k + 1) / 2.0));
-        }
+      for (size_t j = 0; j < n; j++) {
+        cprob[(w*10) + k] += ((rating[j * m + w] == urating[w]) && (rating[j * m + 4] == (k + 1) / 2.0));
       }
     }
   }
 
+  /* finalize probs */
   for (size_t i = 0; i < 40; i++) {
-    cprob[i] /= count[i];
+    if (count[i] == 0.0){
+      cprob[i] = 0;
+    }
+    else {
+      cprob[i] /= count[i];
+    }
   }
+
   /* compute finalPredictions for each rating */
   double finalPred[10] = { 0.0 };
   for (size_t i = 0; i < 10; i++) {
     finalPred[i] = prob[i] * cprob[i] * cprob[i + 10] * cprob[i + 20] * cprob[i + 30];
   } 
+
   /* Find index of maximum (most-likely) value in finalPredictions */
   double max = finalPred[0];
   double prediction = 0.0;
